@@ -1,0 +1,135 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Survey {
+  survey_id: String!
+  survey_title: String!
+  survey_description: String!
+  submit_date: DateTime!
+  answer_score: Int!
+  reg_date: DateTime!
+  mod_date: DateTime!
+  del_date: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Question {
+  question_id: String!
+  question_content: String!
+  question_description: String!
+  is_duplicate_option: Boolean!
+  reg_date: DateTime!
+  mod_date: DateTime!
+  del_date: DateTime!
+  survey: Survey!
+}
+
+type Option {
+  option_id: String!
+  option_content: String!
+  option_description: String!
+  score: Int!
+  reg_date: DateTime!
+  mod_date: DateTime!
+  del_date: DateTime!
+  question: Question!
+}
+
+type Answer {
+  answer_id: String!
+  reg_date: DateTime!
+  mod_date: DateTime!
+  del_date: DateTime!
+  survey: Survey!
+  question: Question!
+  option: Option!
+}
+
+type Query {
+  fetchSurveyAll: [Survey!]!
+  fetchSurvey(surveyId: String!): Survey!
+  fetchFinishedSurvey: [Survey!]!
+  fetchQusetionAll: [Question!]!
+  fetchQuestion(questionId: String!): Question!
+  fetchQuestionBySurvey(surveyId: String!): [Question!]!
+  fetchAnswerAll: [Answer!]!
+  fetchAnswer(answerId: String!): Answer!
+  fetchAnswerBySurvey(surveyId: String!): [Answer!]!
+  fetchAnswerByQuestion(questionId: String!): [Answer!]!
+  fetchOptionAll: [Option!]!
+  fetchOption(optionId: String!): Option!
+  fetchOptionByQuestion(questionId: String!): Option!
+}
+
+type Mutation {
+  createSurvey(createSurveyInput: CreateSurveyInput!): Survey!
+  updateSurvey(surveyId: String!, updateSurveyInput: UpdateSurveyInput!): Survey!
+  deleteSurvey(surveyId: String!): Boolean!
+  submitSurvey(surveyId: String!): Survey!
+  createQusetion(createQuestionInput: CreateQuestionInput!): Question!
+  updateQusetion(questionId: String!, updateQuestionInput: UpdateQuestionInput!): Question!
+  deleteQusetion(questionId: String!): Boolean!
+  createAnswer(createAnswerInput: CreateAnswerInput!): [String!]!
+  updateAnswer(updateAnswerInput: UpdateAnswerInput!): [String!]!
+  deleteAnswer(deleteAnswerInput: DeleteAnswerInput!): Boolean!
+  createOption(createOptionInput: CreateOptionInput!): Option!
+  updateOption(optionId: String!, updateOptionInput: UpdateOptionInput!): Option!
+  deleteOption(optionId: String!): Boolean!
+}
+
+input CreateSurveyInput {
+  survey_title: String!
+  survey_description: String!
+}
+
+input UpdateSurveyInput {
+  survey_title: String
+  survey_description: String
+}
+
+input CreateQuestionInput {
+  question_content: String!
+  question_description: String
+  is_duplicate_option: Boolean
+  survey_id: String!
+}
+
+input UpdateQuestionInput {
+  question_content: String
+  question_description: String
+  is_duplicate_option: Boolean
+}
+
+input CreateAnswerInput {
+  survey_id: String!
+  question_id: String!
+  options: [String!]!
+}
+
+input UpdateAnswerInput {
+  survey_id: String!
+  question_id: String!
+  options: [String!]!
+}
+
+input DeleteAnswerInput {
+  answers: [String!]!
+}
+
+input CreateOptionInput {
+  option_content: String!
+  option_description: String
+  score: Int!
+  question_id: String!
+}
+
+input UpdateOptionInput {
+  option_content: String
+  option_description: String
+  score: Int
+}
