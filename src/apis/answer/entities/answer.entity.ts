@@ -1,9 +1,8 @@
-import { Field, ObjectType, Int } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
 import { Option } from 'src/apis/option/entities/option.entity';
 import { Question } from 'src/apis/question/entities/question.entity';
 import { Survey } from 'src/apis/survey/entities/survey.entity';
 import {
-  Column,
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,

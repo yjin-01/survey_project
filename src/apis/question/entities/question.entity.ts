@@ -41,7 +41,7 @@ export class Question {
   @Field(() => Date)
   del_date: Date;
 
-  @ManyToOne(() => Survey, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Survey)
   @Field(() => Survey)
   survey: Survey;
 }

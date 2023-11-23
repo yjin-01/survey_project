@@ -1,7 +1,10 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
+  LoggerService,
   NotFoundException,
   forwardRef,
 } from '@nestjs/common';
@@ -18,16 +21,21 @@ import {
 } from './interface/answer-service.interface';
 import { SurveyService } from '../survey/survey.service';
 import { OptionService } from '../option/option.service';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Injectable()
 export class AnswerService {
   constructor(
     @InjectRepository(Answer)
     private readonly answerRepository: Repository<Answer>, //
+
     @Inject(forwardRef(() => SurveyService))
     private readonly surveyService: SurveyService,
     private readonly questionService: QuestionService,
     private readonly optionService: OptionService,
+
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
   ) {}
 
   findAll(): Promise<Answer[]> {
@@ -85,20 +93,40 @@ export class AnswerService {
         });
 
       // 중복 응답이 불가능한 경우 에러 처리
-      if (!checkedDuplicateOption) throw new Error();
+      if (!checkedDuplicateOption) {
+        this.logger.error('[AnswerService]', {
+          method: 'create',
+          code: '01',
+        });
+        throw new HttpException('중복 응답 불가능', HttpStatus.BAD_REQUEST);
+      }
     }
     // 설문ID 유무 조회
     const survey = await this.surveyService.findOne({ survey_id });
 
     // 존재하지 않으면 에러 처리
-    if (!survey) throw new NotFoundException('존재하지않는 설문문항ID입니다.');
+    if (!survey) {
+      this.logger.error('[AnswerService]', {
+        method: 'create',
+        code: '02',
+      });
+      throw new HttpException('존재하지 않는 설문ID', HttpStatus.BAD_REQUEST);
+    }
 
     // 문항ID 유무 조회
     const question = await this.questionService.findOne({ question_id });
 
     // 존재하지 않으면 에러 처리
-    if (!question)
-      throw new NotFoundException('존재하지않는 설문문항ID입니다.');
+    if (!question) {
+      this.logger.error('[AnswerService]', {
+        method: 'create',
+        code: '02',
+      });
+      throw new HttpException(
+        '존재하지 않는 설문 문항 ID',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     // 선택지 조회
     const option = await this.optionService.find({
@@ -132,23 +160,43 @@ export class AnswerService {
         });
 
       // 중복 응답이 불가능한 경우 에러 처리
-      if (!checkedDuplicateOption) throw new Error();
+      if (!checkedDuplicateOption) {
+        this.logger.error('[AnswerService]', {
+          method: 'update',
+          code: '01',
+        });
+        throw new HttpException('중복 응답 불가능', HttpStatus.BAD_REQUEST);
+      }
     }
     // 설문ID 유무 조회
     const survey = await this.surveyService.findOne({ survey_id });
 
     // 존재하지 않으면 에러 처리
-    if (!survey) throw new NotFoundException('존재하지않는 설문문항ID입니다.');
+    if (!survey) {
+      this.logger.error('[AnswerService]', {
+        method: 'update',
+        code: '02',
+      });
+      throw new HttpException('존재하지 않는 설문ID', HttpStatus.BAD_REQUEST);
+    }
 
     // 문항ID 유무 조회
     const question = await this.questionService.findOne({ question_id });
 
     // 존재하지 않으면 에러 처리
-    if (!question)
-      throw new NotFoundException('존재하지않는 설문문항ID입니다.');
+    if (!question) {
+      this.logger.error('[AnswerService]', {
+        method: 'update',
+        code: '03',
+      });
+      throw new HttpException(
+        '존재하지 않는 설문 문항ID',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     // 문항에 대한 기존 모두 답변 삭제
-    const deleteAnswers = await this.answerRepository.softDelete({
+    await this.answerRepository.softDelete({
       survey: { survey_id },
       question: { question_id },
     });
@@ -178,7 +226,16 @@ export class AnswerService {
       where: { option: In(deleteAnswerInput.answers) },
     });
 
-    if (option.length == 0) throw new BadRequestException();
+    if (option.length == 0) {
+      this.logger.error('[AnswerService]', {
+        method: 'delete',
+        code: '01',
+      });
+      throw new HttpException(
+        '존재하지 않는 선택지 ID',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     const deleteResult = await this.answerRepository.softDelete({
       option: In(deleteAnswerInput.answers),

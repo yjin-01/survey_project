@@ -18,12 +18,12 @@ export class OptionResolver {
     return this.optionService.findOne({ option_id });
   }
 
-  // 문항별 답변 조회
-  @Query(() => Option)
+  // 문항별 선택지 조회
+  @Query(() => [Option])
   fetchOptionByQuestion(
     @Args('questionId') question_id: string,
-  ): Promise<Option> {
-    return this.optionService.findByQuestion({ question_id });
+  ): Promise<Option[]> {
+    return this.optionService.findOptionByQuestion({ question_id });
   }
 
   @Mutation(() => Option)

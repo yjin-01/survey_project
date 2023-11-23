@@ -41,7 +41,7 @@ export class Option {
   @Field(() => Date)
   del_date: Date;
 
-  @ManyToOne(() => Question, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Question)
   @Field(() => Question)
   question: Question;
 }

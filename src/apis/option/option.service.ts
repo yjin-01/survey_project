@@ -1,8 +1,9 @@
 import {
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
-  NotFoundException,
-  forwardRef,
+  LoggerService,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
@@ -16,7 +17,7 @@ import {
   IOptionServiceUpdate,
 } from './interface/option-service.interface';
 import { QuestionService } from '../question/question.service';
-import { AnswerService } from '../answer/answer.service';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Injectable()
 export class OptionService {
@@ -25,6 +26,9 @@ export class OptionService {
     private readonly optionRepository: Repository<Option>, //
 
     private readonly questionService: QuestionService,
+
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
   ) {}
 
   findAll(): Promise<Option[]> {
@@ -48,11 +52,12 @@ export class OptionService {
     return option;
   }
 
-  findByQuestion({
+  findOptionByQuestion({
     question_id,
-  }: IOptionServiceFindByQuestion): Promise<Option> {
-    return this.optionRepository.findOne({
+  }: IOptionServiceFindByQuestion): Promise<Option[]> {
+    return this.optionRepository.find({
       where: { question: { question_id } },
+      relations: ['question'],
       order: { reg_date: 'DESC' },
     });
   }
@@ -64,8 +69,16 @@ export class OptionService {
     const question = await this.questionService.findOne({ question_id });
 
     // 존재하지 않으면 에러 처리
-    if (!question)
-      throw new NotFoundException('존재하지않는 설문문항ID입니다.');
+    if (!question) {
+      this.logger.error('[OptionService]', {
+        method: 'create',
+        code: '01',
+      });
+      throw new HttpException(
+        '존재하지 않는 설문 문항 ID',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     const createResult = await this.optionRepository.save({
       ...restInput,
@@ -83,7 +96,16 @@ export class OptionService {
       where: { option_id },
     });
 
-    if (!Option) throw new NotFoundException('존재하지않는 답변ID입니다.');
+    if (!option) {
+      this.logger.error('[OptionService]', {
+        method: 'update',
+        code: '01',
+      });
+      throw new HttpException(
+        '존재하지 않는 설문 문항 선택지 ID',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     const updateResult = await this.optionRepository.save({
       ...option,
@@ -98,7 +120,16 @@ export class OptionService {
       where: { option_id },
     });
 
-    if (!option) throw new NotFoundException('존재하지않는 설문 문항입니다.');
+    if (!option) {
+      this.logger.error('[OptionService]', {
+        method: 'delete',
+        code: '01',
+      });
+      throw new HttpException(
+        '존재하지 않는 설문 문항 선택지 ID',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     const deleteResult = await this.optionRepository.softDelete({
       option_id,

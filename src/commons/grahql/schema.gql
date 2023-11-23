@@ -54,16 +54,16 @@ type Query {
   fetchSurveyAll: [Survey!]!
   fetchSurvey(surveyId: String!): Survey!
   fetchFinishedSurvey: [Survey!]!
-  fetchQusetionAll: [Question!]!
-  fetchQuestion(questionId: String!): Question!
-  fetchQuestionBySurvey(surveyId: String!): [Question!]!
   fetchAnswerAll: [Answer!]!
   fetchAnswer(answerId: String!): Answer!
   fetchAnswerBySurvey(surveyId: String!): [Answer!]!
   fetchAnswerByQuestion(questionId: String!): [Answer!]!
+  fetchQusetionAll: [Question!]!
+  fetchQuestion(questionId: String!): Question!
+  fetchQuestionBySurvey(surveyId: String!): [Question!]!
   fetchOptionAll: [Option!]!
   fetchOption(optionId: String!): Option!
-  fetchOptionByQuestion(questionId: String!): Option!
+  fetchOptionByQuestion(questionId: String!): [Option!]!
 }
 
 type Mutation {
@@ -71,12 +71,12 @@ type Mutation {
   updateSurvey(surveyId: String!, updateSurveyInput: UpdateSurveyInput!): Survey!
   deleteSurvey(surveyId: String!): Boolean!
   submitSurvey(surveyId: String!): Survey!
-  createQusetion(createQuestionInput: CreateQuestionInput!): Question!
-  updateQusetion(questionId: String!, updateQuestionInput: UpdateQuestionInput!): Question!
-  deleteQusetion(questionId: String!): Boolean!
   createAnswer(createAnswerInput: CreateAnswerInput!): [String!]!
   updateAnswer(updateAnswerInput: UpdateAnswerInput!): [String!]!
   deleteAnswer(deleteAnswerInput: DeleteAnswerInput!): Boolean!
+  createQusetion(createQuestionInput: CreateQuestionInput!): Question!
+  updateQusetion(questionId: String!, updateQuestionInput: UpdateQuestionInput!): Question!
+  deleteQusetion(questionId: String!): Boolean!
   createOption(createOptionInput: CreateOptionInput!): Option!
   updateOption(optionId: String!, updateOptionInput: UpdateOptionInput!): Option!
   deleteOption(optionId: String!): Boolean!
@@ -90,19 +90,6 @@ input CreateSurveyInput {
 input UpdateSurveyInput {
   survey_title: String
   survey_description: String
-}
-
-input CreateQuestionInput {
-  question_content: String!
-  question_description: String
-  is_duplicate_option: Boolean
-  survey_id: String!
-}
-
-input UpdateQuestionInput {
-  question_content: String
-  question_description: String
-  is_duplicate_option: Boolean
 }
 
 input CreateAnswerInput {
@@ -119,6 +106,19 @@ input UpdateAnswerInput {
 
 input DeleteAnswerInput {
   answers: [String!]!
+}
+
+input CreateQuestionInput {
+  question_content: String!
+  question_description: String
+  is_duplicate_option: Boolean
+  survey_id: String!
+}
+
+input UpdateQuestionInput {
+  question_content: String
+  question_description: String
+  is_duplicate_option: Boolean
 }
 
 input CreateOptionInput {

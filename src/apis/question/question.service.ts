@@ -1,8 +1,10 @@
 import {
   Inject,
   Injectable,
-  NotFoundException,
   forwardRef,
+  LoggerService,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,6 +17,7 @@ import {
   IQuestionServiceUpdate,
 } from './interfaces/question-service.interface';
 import { SurveyService } from '../survey/survey.service';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Injectable()
 export class QuestionService {
@@ -24,6 +27,9 @@ export class QuestionService {
 
     @Inject(forwardRef(() => SurveyService))
     private readonly surveyService: SurveyService,
+
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
   ) {}
 
   findAll(): Promise<Question[]> {
@@ -61,9 +67,16 @@ export class QuestionService {
   async checkedDuplicateOption({ question_id }) {
     const question = await this.findOne({ question_id });
 
-    console.log(question);
-
-    if (!question) throw Error('존재하지않는 설문 문항입니다.');
+    if (!question) {
+      this.logger.error('[QustionService]', {
+        method: 'checkedDuplicateOption',
+        code: '01',
+      });
+      throw new HttpException(
+        '존재하지 않는 설문 문항 ID',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     return question.is_duplicate_option;
   }
@@ -72,11 +85,18 @@ export class QuestionService {
     createQuestionInput,
   }: IQuestionServiceCreate): Promise<Question> {
     const { survey_id, ...restInput } = createQuestionInput;
+
     // 문항ID 유무 조회
     const survey = await this.surveyService.findOne({ survey_id });
 
     // 존재하지 않으면 에러 처리
-    if (!survey) throw new NotFoundException('존재하지않는 설문문항ID입니다.');
+    if (!survey) {
+      this.logger.error('[QustionService]', {
+        method: 'create',
+        code: '01',
+      });
+      throw new HttpException('존재하지 않는 설문ID', HttpStatus.BAD_REQUEST);
+    }
     const createResult = await this.questionRepository.save({
       ...restInput,
       survey,
@@ -93,7 +113,16 @@ export class QuestionService {
       where: { question_id },
     });
 
-    if (!question) throw Error('존재하지않는 설문 문항입니다.');
+    if (!question) {
+      this.logger.error('[QustionService]', {
+        method: 'update',
+        code: '01',
+      });
+      throw new HttpException(
+        '존재하지 않는 설문 문항 ID',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     const updateResult = await this.questionRepository.save({
       ...question,
@@ -108,7 +137,16 @@ export class QuestionService {
       where: { question_id },
     });
 
-    if (!question) throw Error('존재하지않는 설문 문항입니다.');
+    if (!question) {
+      this.logger.error('[QustionService]', {
+        method: 'delete',
+        code: '01',
+      });
+      throw new HttpException(
+        '존재하지 않는 설문 문항 ID',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     const deleteResult = await this.questionRepository.softDelete({
       question_id,
